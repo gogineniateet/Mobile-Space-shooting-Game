@@ -54,13 +54,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 556053818330263015}
-  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 556053818525944817}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &556053818330263013
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -98,9 +98,9 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingLayerID: 68934119
+  m_SortingLayer: 2
+  m_SortingOrder: 0
   m_Sprite: {fileID: -2311659948842064771, guid: 6520dda4a70dfbf40a55b7af39ecda4e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -194,10 +194,10 @@ PolygonCollider2D:
   m_Points:
     m_Paths:
     - - {x: 0, y: 0.75854635}
-      - {x: -0.48459554, y: 0.09937158}
-      - {x: -0.5171026, y: -0.5195887}
-      - {x: 0.50436443, y: -0.5300708}
-      - {x: 0.49507773, y: 0.13081858}
+      - {x: -0.26845506, y: 0.052753054}
+      - {x: -0.5001504, y: -0.27801996}
+      - {x: 0.4535078, y: -0.2927401}
+      - {x: 0.28741336, y: -0.0005609244}
 --- !u!114 &556053818525944830
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -213,4 +213,8 @@ MonoBehaviour:
   rotationSpeed: 10
   movementSpeed: 2
   launcher: {fileID: 556053817700094860}
-  useAccelerometer: 1
+  lives: 5
+  isGameOver: 0
+  isWon: 0
+  healthText: {fileID: 0}
+  scoreText: {fileID: 0}

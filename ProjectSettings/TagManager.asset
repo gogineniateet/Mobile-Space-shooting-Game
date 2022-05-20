@@ -14,7 +14,7 @@ TagManager:
   - Ship
   - Bullet
   - Enemy
-  - UI
+  - EnemyBullet
   - 
   - 
   - 
@@ -40,4 +40,10 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Background
+    uniqueID: 694921217
+    locked: 0
+  - name: ForeGround
+    uniqueID: 68934119
     locked: 0

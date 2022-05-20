@@ -1,121 +1,134 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ShipController : MonoBehaviour
 {
-    #region PUBLIC VARIABLES
-    public float rotationSpeed = 10f; //   rotation of ship in degrees per second.
-    public float movementSpeed = 2f; // the movement of ship by force applied in second
+    #region PUBLIC VARIABLES 
+    public float rotationSpeed = 10f; //Rotation of ship in degrees per second
+    public float movementSpeed = 2f;    // Force applied to ship in unit per second.
     public Transform launcher;
-    //public GameObject bulletfireEffect;
-    public bool useAccelerometer = false;
+    GameManager gameManager;
+    public int lives = 3;
+    public bool isGameOver = false;
+    public bool isWon = false;
+    public Text healthText;
+    public Text scoreText;
     #endregion
-    #region PRIVATE VARIABLES
-    private bool isRotating = false;
-    private const string TURN_COROUTINE_FUNCTION = "TurnRotateOnTap";
-    //private GameManager gameManager;
-    private Rigidbody2D rigidbody2D;
 
+
+    #region PRIVATE VARIABLES 
+    bool isMoving = false;
+    const string TURN_COROUTINE_FUNCTION = "MoveTowardsTouch";
+    private bool useAccelerometer;
+    private int score;
     #endregion
+
+
     #region MONOBEHAVIOUR METHODS
-    private void Awake()
+    public static ShipController instance;
+    public static ShipController Instance
     {
-        rigidbody2D = GetComponent<Rigidbody2D>();
+        get
+        {
+            if (instance == null)
+            {
+                instance = GameObject.FindObjectOfType<ShipController>();
+
+                if (instance == null)
+                {
+                    GameObject container = new GameObject("Ship");
+                    instance = container.AddComponent<ShipController>();
+                }
+            }
+            return instance;
+        }
     }
+
+
+
+
+    // Start is called before the first frame update
     void Start()
     {
-        //gameManager = GameManager.Instance;
+        gameManager = GameManager.Instance;
     }
-
-
-    // Update is called once per frame
-    void Update()
+    private void OnEnable() //Subscribing event when a GameObject is active
     {
-
+        SpaceShooter.UserInputHandler.OnTouchAction += ToWardsTouch;
     }
-    private void OnEnable() // When gameobject is active, then we are subscribing 
+    private void OnDisable()    //DeSubscribing event when a GameObject is active
     {
-        if (!useAccelerometer)
-        {
-            MyMobileGalaxyShooter.UserInputHandler.OnTouchAction += TowardsTouch;
-            MyMobileGalaxyShooter.UserInputHandler.OnPanBegan += StopTurn;
-            MyMobileGalaxyShooter.UserInputHandler.OnPanHeld += MoveTowardsTouch;
-        }
-
-        else
-        {
-            MyMobileGalaxyShooter.UserInputHandler.OnAccelerometerChanged += MoveWithAcceleration;
-            MyMobileGalaxyShooter.UserInputHandler.OnTouchAction += TowardsTouch;
-        }
-
-    }
-    private void OnDisable()// When gameobject is inactive, then we are desubscribing 
-    {
-        if (!useAccelerometer)
-        {
-            MyMobileGalaxyShooter.UserInputHandler.OnTouchAction -= TowardsTouch;
-            MyMobileGalaxyShooter.UserInputHandler.OnPanBegan -= StopTurn;
-            MyMobileGalaxyShooter.UserInputHandler.OnPanHeld -= MoveTowardsTouch;
-        }
-        else
-        {
-            MyMobileGalaxyShooter.UserInputHandler.OnAccelerometerChanged -= MoveWithAcceleration;
-            MyMobileGalaxyShooter.UserInputHandler.OnTouchAction -= TowardsTouch;
-        }
-    }
-
-    #endregion
-    #region MY PUBLIC METHODS
-    public void TowardsTouch(Touch touch)
-    {
-        Vector3 worldTouchPosition = Camera.main.ScreenToWorldPoint(touch.position); //It converts pixel coordinates to world coordinates
-        StopCoroutine(TURN_COROUTINE_FUNCTION);
-        StartCoroutine(TURN_COROUTINE_FUNCTION, worldTouchPosition);
-    }
-    
-    IEnumerator TurnRotateOnTap(Vector3 tempPoint)
-    {
-        isRotating = true;
-        tempPoint = tempPoint - this.transform.position;// difference between touch position and current ship position
-        tempPoint.z = transform.position.z; // Assigning the z value of ship position to touch position
-        Quaternion startRotation = this.transform.rotation; //took the value of ship's rotation
-        Quaternion endRotation = Quaternion.LookRotation(tempPoint, Vector3.forward);
-
-        for (float i = 0; i < 1f; i += Time.deltaTime)
-        {
-
-            transform.rotation = Quaternion.Slerp(startRotation, endRotation, i);
-            yield return null;
-        }
-
-        transform.rotation = endRotation;
-        Shoot();
-        isRotating = false;
-
+        SpaceShooter.UserInputHandler.OnTouchAction -= ToWardsTouch;
     }
     #endregion
-    #region MY PRIVATE METHODS
-    private void StopTurn(Touch t)        //When pan gesture began
+
+
+
+    #region PUBLIC METHODS
+    public void ToWardsTouch(Touch touch)
     {
+        Vector3 targetPosition = Camera.main.ScreenToWorldPoint(touch.position); //It converts pixel coordinates to world coordinates.
         StopCoroutine(TURN_COROUTINE_FUNCTION);
-        isRotating = false;
+        StartCoroutine(TURN_COROUTINE_FUNCTION, targetPosition);
+    }
+    public void LostLife(int life)
+    {
+        lives = lives - life;
+        //Debug.Log("life" + lives);
+        StartCoroutine(StartInvincibilityTimer(2.5f));
+        healthText.text = lives.ToString();
+        if (lives <= 0)
+        {
+            isGameOver = true;
+            isWon = false;
+            gameManager.GameOver();
+        }
     }
 
+    // updating score when eenmy destroyed
+    public void UpdateScore(int value)
+    {
+        score = score + value;
+        //Debug.Log(score);
+        scoreText.text = score.ToString();
+        if(score == 100)
+        {
+            isWon = true;
+        }
+    }
+    #endregion
+
+
+
+    #region PRIVATE METHODS
     private void Shoot()
     {
-        //BulletScript bullet = PoolManager.Instance.Spawn(Constants.BULLET_PREFAB_NAME).GetComponent<BulletScript>();
-        //Destroy(Instantiate(bulletfireEffect, launcher.position, Quaternion.identity),2f);
-        //ParticleManager.Instance.PlayingEffect(bulletfireEffect, launcher.position);
-        //bullet.SetPosition(launcher.position);
-        //bullet.SetTrajectory(bullet.transform.position + transform.forward);
+        BulletScript bullet = PoolManager.Instance.Spawn("Bullet").GetComponent<BulletScript>();
+        bullet.SetPosition(launcher.position);
     }
-    public void OnHit()
+    #endregion
+
+
+
+    IEnumerator MoveTowardsTouch(Vector3 tempPoint)
     {
-        //gameManager.LoseLife();
-        StartCoroutine(StartInvincibilityTimer(2.5f));
+        isMoving = true;
+        tempPoint.z = transform.position.z;  //Assigning z value of ship position to touch position
+        tempPoint.y = transform.position.y;  //Assigning y value of ship position to touch position
+
+        for (float i = 0; i < 1; i = i + Time.deltaTime)
+        {
+            transform.position = Vector3.Lerp(transform.position, tempPoint, i);
+            yield return null;
+        }
+        transform.position = tempPoint;
+        Shoot();
+        isMoving = false;
+
     }
-    // Make the ship invincible for a time.
+
     private IEnumerator StartInvincibilityTimer(float timeLimit)
     {
         GetComponent<Collider2D>().enabled = false;
@@ -132,43 +145,9 @@ public class ShipController : MonoBehaviour
             spriteRenderer.enabled = !spriteRenderer.enabled;
             timer += blinkSpeed;
         }
-
         spriteRenderer.enabled = true;
         GetComponent<Collider2D>().enabled = true;
     }
-    private void MoveTowardsTouch(Touch t)
-    {
-        Vector3 targetPoint = Camera.main.ScreenToWorldPoint(t.position);
 
-        rigidbody2D.AddForce(transform.forward * movementSpeed * Time.deltaTime);
-        TurnTowardsPointUpdate(targetPoint);
-    }
-    private void TurnTowardsPointUpdate(Vector3 point)
-    {
-        point = point - transform.position;
-        point.z = transform.position.z;
 
-        Quaternion startRotation = transform.rotation;
-        Quaternion endRotation = Quaternion.LookRotation(point, Vector3.forward);
-
-        transform.rotation = Quaternion.RotateTowards(startRotation, endRotation, rotationSpeed * Time.deltaTime);
-    }
-    private void MoveWithAcceleration(Vector3 acceleration)
-    {
-        if (!isRotating)
-        {
-            acceleration.z = 0;
-
-            if (acceleration.sqrMagnitude >= 0.03f)
-            {
-                Vector3 targetPoint = transform.position + acceleration;
-
-                rigidbody2D.AddForce(transform.forward * movementSpeed * Time.deltaTime);
-                TurnTowardsPointUpdate(targetPoint);
-
-            }
-        }
-    }
-
-    #endregion
 }
